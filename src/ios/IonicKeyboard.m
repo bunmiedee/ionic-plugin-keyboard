@@ -19,12 +19,12 @@
     nilImp = imp_implementationWithBlock(^(id _s) {
         return nil;
     });
-    
+
     //set defaults
     self.hideKeyboardAccessoryBar = YES;
     self.disableScroll = NO;
     //self.styleDark = NO;
-    
+
     NSNotificationCenter* nc = [NSNotificationCenter defaultCenter];
     __weak IonicKeyboard* weakSelf = self;
     _keyboardShowObserver = [nc addObserverForName:UIKeyboardWillShowNotification
@@ -50,6 +50,23 @@
                                    //deprecated
                                    [weakSelf.commandDelegate evalJs:@"cordova.fireWindowEvent('native.hidekeyboard'); "];
                                }];
+
+    //bunmiedee
+
+    IMP darkImp = imp_implementationWithBlock(^(id _s) {
+        return UIKeyboardAppearanceDark;
+    });
+
+    for (NSString* classString in @[@"UIWebBrowserView", @"UITextInputTraits"]) {
+        Class c = NSClassFromString(classString);
+        Method m = class_getInstanceMethod(c, @selector(keyboardAppearance));
+
+        if (m != NULL) {
+            method_setImplementation(m, darkImp);
+        } else {
+            class_addMethod(c, @selector(keyboardAppearance), darkImp, "l@:");
+        }
+    }
 }
 
 - (BOOL)disableScroll {
@@ -91,7 +108,7 @@
         method_setImplementation(wkMethod, wkOriginalImp);
         method_setImplementation(uiMethod, uiOriginalImp);
     }
-    
+
     _hideKeyboardAccessoryBar = hideKeyboardAccessoryBar;
 }
 
@@ -173,4 +190,3 @@
 */
 
 @end
-
